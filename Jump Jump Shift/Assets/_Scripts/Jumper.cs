@@ -6,12 +6,12 @@ using UnityEngine;
 public class Jumper : MonoBehaviour
 {
     [Header("Inscribed")]
-    public float maxSpeed = 30; // The fastest I want the jumper to move
-    public float acceleration = 5; // How fast the jumper gains speed
-    public float deceleration = 3; // How fast the jumper loses speed
+    public float maxSpeed = 20; // The fastest I want the jumper to move
+    public float acceleration = 2; // How fast the jumper gains speed
+    public float deceleration = 1.75f; // How fast the jumper loses speed
 
     [Header("Dynamic")]
-    public float speed = 0; // the jumpers current speed
+    public float horizonSpeed = 0; // the jumpers current speed
 
     // Start is called before the first frame update
     void Start()
@@ -24,30 +24,24 @@ public class Jumper : MonoBehaviour
         float xAxis = Input.GetAxisRaw("Horizontal");
         Vector3 pos = transform.position;
 
-        if (xAxis == 1) // If holding right, accelerate right
+        horizonSpeed = horizonSpeed + (acceleration * xAxis);
+
+        if (horizonSpeed > maxSpeed)
         {
-            speed = speed + acceleration;
-            if (speed > maxSpeed) 
-            {
-                speed = maxSpeed; 
-            }
+            horizonSpeed = maxSpeed;
         }
 
-        if (xAxis == -1) // If holding left, accelerate left
+        if (horizonSpeed < -maxSpeed)
         {
-            speed = speed - acceleration;
-            if(speed < -maxSpeed)
-            {
-                speed = -maxSpeed;
-            }
+            horizonSpeed = -maxSpeed;
         }
 
         if (xAxis == 0)
         {
-            speed = speed / deceleration;
+            horizonSpeed = horizonSpeed / deceleration;
         }
 
-        pos.x = pos.x + speed * Time.deltaTime;
+        pos.x = pos.x + horizonSpeed * Time.deltaTime;
         transform.position = pos;
         
     }
