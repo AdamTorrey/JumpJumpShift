@@ -45,18 +45,35 @@ public class Jumper : MonoBehaviour
     void Start()
     {
         gravityScale = RB.gravityScale;
+        doubleJump = true;
     }
 
     void Update()
     {
-        isGrounded = Physics2D.OverlapBox(_groundCheck.position, _groundCheckSize, 0, _groundLayer);
-        if ((Input.GetKeyDown(KeyCode.Space)) & isGrounded == true)
+        isGrounded = Physics2D.OverlapBox(_groundCheck.position, _groundCheckSize, 0, _groundLayer); // Check if they are on the ground
+        
+        if ((Input.GetKeyDown(KeyCode.Space)) & isGrounded == true) // Regular Jump
         {
             Jump();
         }
 
+        if ((Input.GetKeyDown(KeyCode.Space)) & isGrounded == false) // Double Jump
+        {
+            if (doubleJump == true)
+            {
+                RB.velocity = new Vector2(RB.velocity.x, 0);
+                Jump();
+                doubleJump = false;
+            }
+        }
+
         if (Input.GetKeyUp(KeyCode.Space)){
             JumpCut();
+        }
+
+        if (isGrounded == true)
+        {
+            doubleJump = true;
         }
     }
 
@@ -66,7 +83,7 @@ public class Jumper : MonoBehaviour
         Vector3 pos = transform.position;
 
 
-        horizonSpeed = horizonSpeed + (acceleration * xAxis);
+        horizonSpeed = horizonSpeed + (acceleration * xAxis); // Horizontal speed
 
         if (horizonSpeed > maxSpeed)
         {
@@ -83,7 +100,7 @@ public class Jumper : MonoBehaviour
             horizonSpeed = horizonSpeed / deceleration;
         }
 
-        pos.x = pos.x + horizonSpeed * Time.deltaTime;
+        pos.x = pos.x + horizonSpeed * Time.deltaTime; // Position updates
         transform.position = pos;
 
         if (RB.velocity.y < 0 & !wallSliding)
