@@ -14,6 +14,7 @@ public class Jumper : MonoBehaviour
     public float deceleration = 1.75f; // How fast the jumper loses speed
     public float jumpHeight = 15f; // The force with which the jumper jumps
     public float gravityMult = 1.5f; // The multiplier for gravity when falling
+    public float maxFallSpeed = 25f; // Maximum fall speed
     public float jumpCutMult = .5f; // The multiplier for cutting a jump short
 
     [Header("Dynamic")]
@@ -57,9 +58,9 @@ public class Jumper : MonoBehaviour
             Jump();
         }
 
-        if ((Input.GetKeyDown(KeyCode.Space)) & isGrounded == false) // Double Jump
+        if ((Input.GetKeyDown(KeyCode.Space)) & isGrounded == false) // Double Jump and wall jump
         {
-            if (doubleJump == true)
+            if (doubleJump == true & !wallSliding) // Double jump if possible and not wall sliding
             {
                 RB.velocity = new Vector2(RB.velocity.x, 0);
                 Jump();
@@ -75,6 +76,12 @@ public class Jumper : MonoBehaviour
         {
             doubleJump = true;
         }
+
+        if (RB.velocity.y < -maxFallSpeed) // Enforce Max Fall Speed
+        {
+            RB.velocity = new Vector2(RB.velocity.x, -maxFallSpeed);
+        }
+
     }
 
     void FixedUpdate()
@@ -103,16 +110,17 @@ public class Jumper : MonoBehaviour
         pos.x = pos.x + horizonSpeed * Time.deltaTime; // Position updates
         transform.position = pos;
 
-        if (RB.velocity.y < 0 & !wallSliding)
+        if (RB.velocity.y < 0 & !wallSliding) // If falling and not wall sliding, gravity is slightly increased
         {
             RB.gravityScale = RB.gravityScale * gravityMult;
         }
-        else
+        else // If not falling, gravity is normal
         {
             RB.gravityScale = gravityScale;
         }
 
         sinceLastJump = sinceLastJump + Time.deltaTime;
+
     }
 
     void Jump()
