@@ -51,6 +51,8 @@ public class Jumper : MonoBehaviour
 
     void Update()
     {
+        float xAxis = Input.GetAxisRaw("Horizontal");
+
         isGrounded = Physics2D.OverlapBox(_groundCheck.position, _groundCheckSize, 0, _groundLayer); // Check if they are on the ground
         
         if ((Input.GetKeyDown(KeyCode.Space)) & isGrounded == true) // Regular Jump
@@ -66,6 +68,24 @@ public class Jumper : MonoBehaviour
                 Jump();
                 doubleJump = false;
             }
+
+            if (wallSliding) // Wall jump
+            {
+                RB.velocity = new Vector2(RB.velocity.x, 0);
+                Jump();
+
+                doubleJump = true;
+
+                if (horizonSpeed > 0) // Push away from the wall
+                {
+                    horizonSpeed = -maxSpeed;
+                }
+
+                else
+                {
+                    horizonSpeed = maxSpeed;
+                }
+            }
         }
 
         if (Input.GetKeyUp(KeyCode.Space)){
@@ -77,11 +97,29 @@ public class Jumper : MonoBehaviour
             doubleJump = true;
         }
 
+        if (wallSliding)
+        {
+            if (RB.velocity.y < -maxFallSpeed * 0.5) // Max fall speed is halved while wall sliding
+            {
+                RB.velocity = new Vector2(RB.velocity.x, (float)(-maxFallSpeed * 0.5)); // Fall slower while wall sliding
+            }
+
+            if (horizonSpeed > acceleration & xAxis > 0) // Make sure that horizontal movement speed is not at max while on the wall to avoid jump when sliding up a ledge
+            {
+                horizonSpeed = acceleration;
+            }
+
+            if (horizonSpeed < -acceleration & xAxis < 0)
+            {
+                horizonSpeed = -acceleration;
+            }
+
+        }
+
         if (RB.velocity.y < -maxFallSpeed) // Enforce Max Fall Speed
         {
             RB.velocity = new Vector2(RB.velocity.x, -maxFallSpeed);
         }
-
     }
 
     void FixedUpdate()
@@ -116,8 +154,10 @@ public class Jumper : MonoBehaviour
         }
         else // If not falling, gravity is normal
         {
-            RB.gravityScale = gravityScale;
+            RB.gravityScale = (float)(gravityScale * 1.4);
         }
+
+        wallSliding = (xAxis != 0 & Physics2D.OverlapBox(_groundCheck.position, _wallCheckSize, 0, _groundLayer)); // Check if they are making contact with the wall
 
         sinceLastJump = sinceLastJump + Time.deltaTime;
 
