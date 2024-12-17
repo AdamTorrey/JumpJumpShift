@@ -18,11 +18,12 @@ public class Jumper : MonoBehaviour
     public float jumpCutMult = .5f; // The multiplier for cutting a jump short
 
     [Header("Dynamic")]
-    public float horizonSpeed = 0; // the jumpers current speed
+    public float horizonSpeed = 0; // The jumpers current speed
     public bool isGrounded;
     public bool doubleJump;
     public bool wallSliding;
-    public float sinceLastJump; //Time since last jump
+    public float sinceLastJump; // Time since last jump
+    public bool immobile; // If the player should be able to move
     
     [Space]
 
@@ -41,6 +42,7 @@ public class Jumper : MonoBehaviour
     void Awake()
     {
         RB = GetComponent<Rigidbody2D>();
+        immobile = false;
     }
 
     void Start()
@@ -88,7 +90,8 @@ public class Jumper : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyUp(KeyCode.Space)){
+        if (Input.GetKeyUp(KeyCode.Space)) // Release Space to Jump Cut
+        {
             JumpCut();
         }
 
@@ -130,7 +133,7 @@ public class Jumper : MonoBehaviour
 
         horizonSpeed = horizonSpeed + (acceleration * xAxis); // Horizontal speed
 
-        if (horizonSpeed > maxSpeed)
+        if (horizonSpeed > maxSpeed) // Enforcing max speed in both directions
         {
             horizonSpeed = maxSpeed;
         }
@@ -144,9 +147,12 @@ public class Jumper : MonoBehaviour
         {
             horizonSpeed = horizonSpeed / deceleration;
         }
-
-        pos.x = pos.x + horizonSpeed * Time.deltaTime; // Position updates
-        transform.position = pos;
+        
+        if (!immobile)
+        {
+            pos.x = pos.x + horizonSpeed * Time.deltaTime; // Position updates
+            transform.position = pos;
+        }
 
         if (RB.velocity.y < 0 & !wallSliding) // If falling and not wall sliding, gravity is slightly increased
         {
@@ -165,15 +171,27 @@ public class Jumper : MonoBehaviour
 
     void Jump()
     {
-        RB.AddForce(new Vector2(0, jumpHeight), ForceMode2D.Impulse);
+        RB.AddForce(new Vector2(0, jumpHeight), ForceMode2D.Impulse); // Add upward velocity
         sinceLastJump = 0;
     }
 
     void JumpCut()
     {
-        if (RB.velocity.y > 0 & sinceLastJump < 1.4)
+        if (RB.velocity.y > 0 & sinceLastJump < 1.4) // If still rising and before 1.4 seconds since jumping
         {
-            RB.velocity = new Vector2(RB.velocity.x, RB.velocity.y * jumpCutMult);
+            RB.velocity = new Vector2(RB.velocity.x, RB.velocity.y * jumpCutMult); // Cut jump by mult
         }
+    }
+
+    public void Dying() // Called when the death animation is playing. Makes entirely immobile
+    {
+        immobile = true;
+        RB.simulated = false;
+    }
+
+    public void Respawning() // Called when the death animation is playing. Makes mobile again
+    {
+        immobile = false;
+        RB.simulated = true;
     }
 }
